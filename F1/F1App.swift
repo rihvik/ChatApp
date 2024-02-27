@@ -11,7 +11,9 @@ import SwiftUI
 struct F1App: App {
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            LoginView(didCompleteLoginProcess: {
+                
+            })
         }
     }
 }
