@@ -52,6 +52,7 @@ class  MainMessagesViewModel: ObservableObject{
             .collection("recent_messages")
             .document(uid)
             .collection("messages")
+            .order(by: "timestamp")
             .addSnapshotListener{ querySnapshot, error in
                 if let error = error {
                     self.errorMessage = "Failed to listen for recent messages:\(error)"
@@ -60,10 +61,14 @@ class  MainMessagesViewModel: ObservableObject{
                 }
                 
                 querySnapshot?.documentChanges.forEach({change in
-                    if change.type == .added {
+                    
                         let docId = change.document.documentID
-                        self.recentMessages.append(.init(documentId: docId,data: change.document.data()))
-                    }
+                        if let index =
+                            self.recentMessages.firstIndex(where: { rm in return rm.documentId == docId}){
+                            self.recentMessages.remove(at:index)
+                        }
+                    self.recentMessages.insert(.init(documentId: docId,data: change.document.data()),at:0)
+                    
                 })
             }
     }
@@ -191,12 +196,14 @@ struct MainMessagesView: View {
                         Text("Destination")
                     } label: {
                         HStack(spacing: 16) {
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 32))
-                                .padding(8)
-                                .overlay(RoundedRectangle(cornerRadius: 44)
-                                            .stroke(Color(.label), lineWidth: 1)
-                                )
+                            WebImage(url: URL(string: recentMessage.profileImageUrl))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:64,height:64)
+                                .clipped()
+                                .cornerRadius(64)
+                                .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black,lineWidth: 2))
+                                .shadow(radius: 5)
                             
                             
                             VStack(alignment: .leading,spacing:8) {
@@ -205,11 +212,12 @@ struct MainMessagesView: View {
                                     .foregroundColor(Color(.label))
                                 Text(recentMessage.text)
                                     .font(.system(size: 14))
-                                    .foregroundColor(Color(.lightGray))
+                                    .foregroundColor(Color(.darkGray))
+                                    .multilineTextAlignment(.leading)
                             }
                             Spacer()
                             
-                            Text("22d")
+                            Text(timeAgoSinceDate(recentMessage.timestamp, currentDate: Date()))
                                 .font(.system(size: 14, weight: .semibold))
                         }
                     }
@@ -249,7 +257,71 @@ struct MainMessagesView: View {
         }
     }
     @State var chatUser : ChatUser?
-}
+    private func timeAgoSinceDate(_ date: Timestamp, currentDate: Date, numericDates: Bool = false) -> String {
+            let calendar = Calendar.current
+            let now = currentDate
+        let earliest = (date.seconds < Int64(now.timeIntervalSince1970)) ? date.dateValue() : now
+        let latest = (date.seconds > Int64(now.timeIntervalSince1970)) ? date.dateValue() : now
+            
+            let components: Set<Calendar.Component> = [.second, .minute, .hour, .day, .weekOfYear, .month, .year]
+            let difference = calendar.dateComponents(components, from: earliest, to: latest)
+            
+            if difference.year! >= 2 {
+                return "\(difference.year!) yrs ago"
+            } else if difference.year! >= 1 {
+                if numericDates {
+                    return "1 yr ago"
+                } else {
+                    return "Last year"
+                }
+            } else if difference.month! >= 2 {
+                return "\(difference.month!) months ago"
+            } else if difference.month! >= 1 {
+                if numericDates {
+                    return "1 mth ago"
+                } else {
+                    return "Last month"
+                }
+            } else if difference.weekOfYear! >= 2 {
+                return "\(difference.weekOfYear!) weeks ago"
+            } else if difference.weekOfYear! >= 1 {
+                if numericDates {
+                    return "1 week ago"
+                } else {
+                    return "Last week"
+                }
+            } else if difference.day! >= 2 {
+                return "\(difference.day!) days ago"
+            } else if difference.day! >= 1 {
+                if numericDates {
+                    return "1 day ago"
+                } else {
+                    return "Yesterday"
+                }
+            } else if difference.hour! >= 2 {
+                return "\(difference.hour!) hours ago"
+            } else if difference.hour! >= 1 {
+                if numericDates {
+                    return "1 hr ago"
+                } else {
+                    return "An hr ago"
+                }
+            } else if difference.minute! >= 2 {
+                return "\(difference.minute!) min ago"
+            } else if difference.minute! >= 1 {
+                if numericDates {
+                    return "1 min ago"
+                } else {
+                    return "A min ago"
+                }
+            } else if difference.second! >= 3 {
+                return "\(difference.second!) sec ago"
+            } else {
+                return "Just now"
+            }
+        }
+    }
+
 
 
 

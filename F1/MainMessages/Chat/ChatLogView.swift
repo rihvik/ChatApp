@@ -264,6 +264,8 @@ private struct DescriptionPlaceholder: View {
     }
 }
 
+
+
 struct ChatLogView_Previews: PreviewProvider {
     static var previews: some View {
         MainMessagesView()
