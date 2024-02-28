@@ -192,9 +192,7 @@ struct MainMessagesView: View {
         ScrollView {
             ForEach(vm.recentMessages) { recentMessage in
                 VStack {
-                    NavigationLink {
-                        Text("Destination")
-                    } label: {
+                    NavigationLink(destination: ChatLogView(chatUser: self.chatUser)) {
                         HStack(spacing: 16) {
                             WebImage(url: URL(string: recentMessage.profileImageUrl))
                                 .resizable()
@@ -320,11 +318,9 @@ struct MainMessagesView: View {
                 return "Just now"
             }
         }
-    }
-
-
-
+}
 
 #Preview {
     MainMessagesView()
 }
+
